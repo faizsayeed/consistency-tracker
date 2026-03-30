@@ -1,0 +1,75 @@
+/* Auth Page - Login/Register */
+
+.auth-wrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg) 100%);
+    padding: 2rem;
+}
+
+.auth-card {
+    background: var(--bg);
+    padding: 3rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    width: 100%;
+    max-width: 420px;
+    text-align: center;
+    animation: slideUp 0.5s ease-out;
+}
+
+.auth-card h1 {
+    margin: 0 0 0.5rem 0;
+    color: var(--primary);
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.auth-card > p {
+    color: var(--text-light);
+    margin-bottom: 2rem;
+    font-size: 0.95rem;
+}
+
+.form-section h2 {
+    margin-bottom: 1.5rem;
+    color: var(--text);
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.error-msg {
+    color: var(--danger);
+    font-size: 0.875rem;
+    display: block;
+    margin-bottom: 1rem;
+}
+
+.toggle-link {
+    margin-top: 1.5rem;
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+.toggle-link a {
+    color: var(--primary);
+    cursor: pointer;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.toggle-link a:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 480px) {
+    .auth-card {
+        padding: 2rem 1.5rem;
+    }
+    
+    .auth-card h1 {
+        font-size: 1.75rem;
+    }
+}

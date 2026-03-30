@@ -1,0 +1,112 @@
+<div class="settings-view">
+    <h1>Settings</h1>
+    
+    <div class="settings-section">
+        <h2>Profile Information</h2>
+        <div class="setting-item">
+            <div class="setting-label">
+                <h3>Email Address</h3>
+                <p>{{user.email}}</p>
+            </div>
+        </div>
+        <div class="setting-item">
+            <div class="setting-label">
+                <h3>Name</h3>
+                <p>{{user.name}}</p>
+            </div>
+        </div>
+        <div class="setting-item">
+            <div class="setting-label">
+                <h3>Phone Number</h3>
+                <p>{{user.phone || 'Not set'}}</p>
+            </div>
+            <div class="setting-action">
+                <button class="btn btn-secondary btn-sm" ng-click="toggleEdit()">Edit</button>
+            </div>
+        </div>
+        
+        <!-- Edit Profile Form -->
+        <div ng-if="editProfile" class="form-section" style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="text" ng-model="profileForm.phone" placeholder="+1234567890" style="padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; width: 100%; font-size: 1rem;">
+                <small style="color: var(--text-light); display: block; margin-top: 0.25rem;">Format: +1234567890 (with country code)</small>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" ng-model="profileForm.email_notifications">
+                    Enable Email Reminders
+                </label>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" ng-model="profileForm.sms_notifications">
+                    Enable SMS Reminders
+                </label>
+            </div>
+            <div class="modal-actions" style="margin-top: 1rem;">
+                <button type="button" class="btn btn-primary" ng-click="saveProfile()" style="padding: 0.75rem 1.5rem; font-size: 1rem;">Save Profile</button>
+                <button type="button" class="btn btn-secondary" ng-click="editProfile = false" style="padding: 0.75rem 1.5rem; font-size: 1rem; margin-left: 0.5rem;">Cancel</button>
+            </div>
+            <p ng-if="profileSuccess" style="color: var(--success); margin-top: 0.5rem;">Profile updated successfully!</p>
+        </div>
+    </div>
+    
+    <div class="settings-section" ng-if="notificationsSupported">
+        <h2>Notifications</h2>
+        <div class="setting-item">
+            <div class="setting-label">
+                <h3>Browser Notifications</h3>
+                <p>Get reminded about your daily habits</p>
+            </div>
+            <div class="setting-action">
+                <button class="btn btn-primary btn-sm" ng-click="enableNotifications()" ng-if="!notificationsEnabled">
+                    Enable
+                </button>
+                <span class="badge badge-success" ng-if="notificationsEnabled">Enabled</span>
+            </div>
+        </div>
+        <div class="setting-item">
+            <div class="setting-label">
+                <h3>Email Notifications</h3>
+                <p>Get reminders via email</p>
+            </div>
+            <div class="setting-action">
+                <span class="badge badge-success" ng-if="user.email_notifications">Enabled</span>
+                <span class="badge" style="background: var(--bg-secondary); color: var(--text-light);" ng-if="!user.email_notifications">Disabled</span>
+            </div>
+        </div>
+        <div class="setting-item">
+            <div class="setting-label">
+                <h3>SMS Notifications</h3>
+                <p>Get reminders via text message</p>
+            </div>
+            <div class="setting-action">
+                <span class="badge badge-success" ng-if="user.sms_notifications && user.phone">Enabled</span>
+                <span class="badge" style="background: var(--bg-secondary); color: var(--text-light);" ng-if="!user.sms_notifications || !user.phone">Disabled</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="settings-section">
+        <h2>Account Actions</h2>
+        <div class="setting-item">
+            <div class="setting-label">
+                <h3>Sign Out</h3>
+                <p>End your current session</p>
+            </div>
+            <div class="setting-action">
+                <button class="btn btn-danger btn-sm" ng-click="logout()">Logout</button>
+            </div>
+        </div>
+        <div class="setting-item">
+            <div class="setting-label">
+                <h3>Delete All Data</h3>
+                <p>Permanently remove all your habits and data</p>
+            </div>
+            <div class="setting-action">
+                <button class="btn btn-danger btn-sm" ng-click="reset()">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>

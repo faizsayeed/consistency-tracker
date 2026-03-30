@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html ng-app="trackerApp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consistency Tracker</title>
+    
+    <!-- AngularJS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-route.js"></script>
+    
+    
+
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/habits.css">
+    <link rel="stylesheet" href="css/analytics.css">
+    <link rel="stylesheet" href="css/settings.css">
+</head>
+<body ng-controller="MainController">
+    
+    <!-- Entry Animation -->
+    <div class="entry-overlay" ng-class="{hidden: !showEntryAnimation}">
+        <div class="entry-logo">Tracker</div>
+        <div class="entry-text">Building your consistency</div>
+        <div class="loading-dots">
+            <div class="loading-dot"></div>
+            <div class="loading-dot"></div>
+            <div class="loading-dot"></div>
+        </div>
+    </div>
+    
+    <!-- Navigation -->
+    <nav class="navbar" ng-show="isLoggedIn()">
+        <div class="nav-container">
+            <a href="#!" class="nav-logo">Tracker</a>
+            <div class="nav-links">
+                <a href="#!/dashboard" class="nav-link" ng-class="{active: currentRoute === 'dashboard'}">Dashboard</a>
+                <a href="#!/habits" class="nav-link" ng-class="{active: currentRoute === 'habits'}">Habits</a>
+                <a href="#!/analytics" class="nav-link" ng-class="{active: currentRoute === 'analytics'}">Analytics</a>
+                <a href="#!/settings" class="nav-link" ng-class="{active: currentRoute === 'settings'}">Settings</a>
+            </div>
+            <div class="nav-right">
+                <button class="btn-theme" ng-click="toggleTheme()">
+                    <i class="fas" ng-class="isDarkMode ? 'fa-sun' : 'fa-moon'"></i>
+                </button>
+                <button class="btn-logout" ng-click="logout()">Logout</button>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <div class="container" ng-class="isDarkMode ? 'dark' : 'light'">
+        <div ng-view></div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="js/app.js"></script>
+    <script src="js/services.js"></script>
+    <script src="js/controllers.js"></script>
+
+</body>
+</html>

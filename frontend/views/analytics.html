@@ -1,0 +1,99 @@
+<div class="analytics-view">
+    <div class="analytics-header">
+        <h1>Analytics</h1>
+    </div>
+    
+    <div ng-if="loading" class="loading-state">
+        <p>Loading analytics...</p>
+    </div>
+    
+    <!-- Stats Row -->
+    <div class="analytics-stats" ng-if="!loading">
+        <div class="stat-card">
+            <div class="stat-label">Completion Rate</div>
+            <div class="stat-value">{{completionPercentage}}%</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Habits Done</div>
+            <div class="stat-value">{{filteredStats.completed}}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Active Habits</div>
+            <div class="stat-value">{{totalHabits}}</div>
+        </div>
+    </div>
+
+    <!-- Heatmap Section -->
+    <div class="heatmap-container" ng-if="!loading">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <div>
+                <h3>Consistency Calendar</h3>
+                <p style="color: var(--text-light); margin-bottom: 0; font-size: 0.9rem;">
+                    Track your habit completion over the past year
+                </p>
+            </div>
+            <div style="min-width: 200px;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem;">Select Habit:</label>
+                <select ng-model="selectedHabit" ng-change="onHabitSelected()" ng-options="habit.id as habit.name for habit in habits" class="habit-select">
+                    <option value="">-- All Habits --</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="calendar-wrapper">
+            <!-- Month labels positioned above calendar -->
+            <div class="month-labels-row">
+                <div class="month-label" ng-repeat="month in monthLabels" ng-style="{'left': (month.offset * 16) + 'px'}">
+                    {{month.name}}
+                </div>
+            </div>
+            
+            <div class="calendar-body">
+                <!-- Day labels -->
+                <div class="day-labels">
+                    <div class="day-label">Mon</div>
+                    <div class="day-label">Wed</div>
+                    <div class="day-label">Fri</div>
+                </div>
+                
+                <!-- Heatmap grid -->
+                <div class="heatmap-grid">
+                    <div class="heatmap-column" ng-repeat="week in calendarData track by $index">
+                        <div class="heatmap-cell"
+                             ng-repeat="day in week track by $index"
+                             ng-class="day.date ? 'level-' + day.level : 'empty'"
+                             ng-if="day.date"
+                             title="{{day.date | date:'MMM d, yyyy'}}: {{day.completed_count}}/{{day.total_habits}} habits completed ({{day.percentage}}%)">
+                        </div>
+                        <div class="heatmap-cell empty" ng-if="!day.date"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Legend -->
+            <div class="heatmap-legend">
+                <span class="legend-text">Less</span>
+                <div class="legend-box level-0"></div>
+                <div class="legend-box level-1"></div>
+                <div class="legend-box level-2"></div>
+                <div class="legend-box level-3"></div>
+                <div class="legend-box level-4"></div>
+                <span class="legend-text">More</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Date Range Filter -->
+    <div class="date-range-picker" ng-if="!loading">
+        <div class="form-group">
+            <label>Start Date</label>
+            <input type="date" ng-model="dateRange.start">
+        </div>
+        <div class="form-group">
+            <label>End Date</label>
+            <input type="date" ng-model="dateRange.end">
+        </div>
+        <button class="btn btn-success" ng-click="filterByDateRange()">Apply</button>
+        <button class="btn btn-secondary" ng-click="resetDateRange()">Reset</button>
+    </div>
+</div>

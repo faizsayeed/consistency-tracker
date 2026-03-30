@@ -1,0 +1,38 @@
+<div class="dashboard-view">
+    <div class="dashboard-header">
+        <h1>Dashboard</h1>
+        <p class="welcome-msg">Welcome back, {{user.name}}! </p>
+    </div>
+    
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label"> Completion Rate</div>
+            <div class="stat-value">{{completionPercentage}}%</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label"> Today's Progress</div>
+            <div class="stat-value">{{todayCompleted}}<span style="font-size: 1.2rem; color: var(--text-light);"> / {{totalHabits}}</span></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label"> Active Habits</div>
+            <div class="stat-value">{{totalHabits}}</div>
+        </div>
+    </div>
+    
+    <div class="habits-section">
+        <h2>Today's Habits</h2>
+        <div ng-if="!habits.length" class="empty-state">
+            <div class="empty-state-icon"><i class="fas fa-clipboard-list"></i></div>
+            <p>No habits yet. Start building your consistency!</p>
+        </div>
+        <div class="habit-list" ng-if="habits.length">
+            <div class="habit-item" ng-repeat="habit in habits" ng-class="{completed: isCompletedToday(habit.id)}">
+                <input type="checkbox" class="habit-checkbox" ng-model="completionMap[habit.id]" ng-change="toggleHabit(habit)">
+                <div class="habit-info">
+                    <div class="habit-name">{{habit.name}}</div>
+                    <div class="habit-meta">{{habit.category}}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

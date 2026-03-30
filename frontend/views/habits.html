@@ -1,0 +1,80 @@
+<div class="habits-view">
+    <div class="habits-header">
+        <h1>Manage Habits</h1>
+        <div class="header-actions">
+            <button ng-if="notificationsSupported && !notificationsEnabled" ng-click="enableNotifications()" class="btn btn-secondary" style="width: auto;">
+                Enable Notifications
+            </button>
+            <button ng-click="openForm()" class="btn btn-primary" style="width: auto;">+ Add Habit</button>
+        </div>
+    </div>
+    
+    <div class="notification-banner" ng-if="notificationsSupported && notificationsEnabled">
+        <i class="fas fa-bell"></i> Notifications enabled - you'll get reminders for your habits!
+    </div>
+    
+    <div class="modal-overlay" ng-class="{show: showForm}" ng-click="closeForm()"></div>
+    <div class="modal" ng-class="{show: showForm}">
+        <button class="modal-close" ng-click="closeForm()">&times;</button>
+        <h2>{{editingHabit ? 'Edit Habit' : 'Add New Habit'}}</h2>
+        <form ng-submit="saveHabit()">
+            <div class="form-group">
+                <label>Habit Name</label>
+                <input type="text" ng-model="form.name" required>
+            </div>
+            <div class="form-group">
+                <label>Category</label>
+                <select ng-model="form.category" required>
+                    <option value="">Select category</option>
+                    <option value="Health">Health</option>
+                    <option value="Learning">Learning</option>
+                    <option value="Fitness">Fitness</option>
+                    <option value="Productivity">Productivity</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea ng-model="form.description" rows="3"></textarea>
+            </div>
+            <div class="form-group" ng-if="notificationsSupported">
+                <label>
+                    <input type="checkbox" ng-model="form.reminder_enabled">
+                    Enable Daily Reminder
+                </label>
+            </div>
+            <div class="form-group" ng-if="form.reminder_enabled && notificationsSupported">
+                <label>Reminder Time</label>
+                <input type="time" ng-model="form.reminder_time">
+            </div>
+            <div class="modal-actions">
+                <button type="submit" class="btn btn-primary">Save</button>
+                <button type="button" ng-click="closeForm()" class="btn btn-secondary">Cancel</button>
+            </div>
+        </form>
+    </div>
+    
+    <div ng-if="!habits.length" class="empty-state">
+        <div class="empty-state-icon"><i class="fas fa-star"></i></div>
+        <p>No habits yet. Start creating one!</p>
+    </div>
+    
+    <div class="habit-cards" ng-if="habits.length">
+        <div class="habit-card" ng-repeat="habit in habits">
+            <div class="habit-card-header">
+                <h3>{{habit.name}}</h3>
+                <div class="habit-card-actions">
+                    <button class="btn-icon" ng-click="editHabit(habit)" title="Edit"><i class="fas fa-pen"></i></button>
+                    <button class="btn-icon" ng-click="deleteHabit(habit.id)" title="Delete"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+            <p>{{habit.description}}</p>
+            <div class="habit-card-footer">
+                <div class="habit-badge">{{habit.category}}</div>
+                <div class="reminder-badge" ng-if="habit.reminder_enabled">
+                    <i class="fas fa-bell"></i> {{habit.reminder_time | date:'HH:mm'}}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
