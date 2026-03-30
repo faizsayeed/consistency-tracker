@@ -51,13 +51,11 @@ app.get('/api/test-notifications', async (req, res) => {
     try {
         console.log('Testing notifications...');
         
-        // Get users with reminders
         const emailUsers = await User.getUsersWithEmailReminders();
         const smsUsers = await User.getUsersWithSMSReminders();
         
         console.log(`Email users: ${emailUsers.length}, SMS users: ${smsUsers.length}`);
         
-        // Send test notifications immediately
         if (emailUsers.length > 0) {
             await notificationService.checkAndSendReminders(emailUsers);
         }
@@ -68,67 +66,13 @@ app.get('/api/test-notifications', async (req, res) => {
         res.json({ 
             message: 'Test notifications sent',
             emailUsers: emailUsers.length,
-            smsUsers: smsUsers.length,
-            currentTime: new Date().toISOString()
+            smsUsers: smsUsers.length
         });
     } catch (error) {
         console.error('Test notification error:', error);
         res.status(500).json({ error: 'Failed to send test notifications' });
     }
 });
-
-// Root route - serve frontend
-app.get('/', (req, res) => {
-    res.sendFile('index.html', { root: '../frontend' });
-});
-
-// Initialize database tables
-async function initDatabase() {
-    try {
-        await User.createTable();
-        await Habit.createTable();
-        await HabitLog.createTable();
-        console.log('Database tables initialized');
-    } catch (error) {
-        console.error('Database initialization error:', error);
-    }
-}
-
-// Notification service (cron job for reminders)
-function initNotificationService() {
-    // Check for reminders every 30 seconds for testing (change to '* * * * *' for production)
-    cron.schedule('*/30 * * * * *', async () => {
-        const now = new Date();
-        const currentTime = now.toTimeString().slice(0, 5); // HH:MM format
-        const currentSeconds = now.getSeconds();
-        
-        console.log(`[${now.toISOString()}] Notification check running at ${currentTime}:${String(currentSeconds).padStart(2, '0')}`);
-        
-        try {
-            // Get users with email reminders enabled
-            const emailUsers = await User.getUsersWithEmailReminders();
-            console.log(`Found ${emailUsers.length} users with email reminders`);
-            if (emailUsers.length > 0) {
-                await notificationService.checkAndSendReminders(emailUsers);
-            }
-            
-            // Get users with SMS reminders enabled
-            const smsUsers = await User.getUsersWithSMSReminders();
-            console.log(`Found ${smsUsers.length} users with SMS reminders`);
-            if (smsUsers.length > 0) {
-                await notificationService.checkAndSendReminders(smsUsers);
-            }
-            
-            if (emailUsers.length > 0 || smsUsers.length > 0) {
-                console.log(`Checked reminders at ${currentTime}`);
-            }
-        } catch (error) {
-            console.error('Notification service error:', error);
-        }
-    });
-    console.log('Notification service initialized (checking every 30 seconds)');
-}
-
 // Start server
 async function startServer() {
     await testConnection();
