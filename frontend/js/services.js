@@ -1,6 +1,6 @@
 // API Configuration
-// Use window.API_URL if set (for production), otherwise default to localhost
-var API_BASE_URL = window.API_URL || 'http://localhost:3000';
+// Production URL - deployed on Render
+const API_BASE_URL = 'https://consistency-tracker-hz8m.onrender.com';
 app.constant('API_URL', API_BASE_URL + '/api');
 
 // Storage Service - Now stores JWT and minimal local data
