@@ -1,0 +1,39 @@
+services:
+  # Web Service (Backend + Frontend)
+  - type: web
+    name: consistency-tracker
+    env: node
+    buildCommand: cd backend && npm install
+    startCommand: node backend/server.js
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DB_HOST
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        value: consistency_tracker
+      - key: DB_PORT
+        value: 3306
+      - key: JWT_SECRET
+        generateValue: true
+      - key: EMAIL_HOST
+        sync: false
+      - key: EMAIL_PORT
+        value: 587
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_PHONE_NUMBER
+        sync: false

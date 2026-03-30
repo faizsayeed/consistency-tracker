@@ -1,5 +1,7 @@
 // API Configuration
-app.constant('API_URL', 'http://localhost:3000/api');
+// Use window.API_URL if set (for production), otherwise default to localhost
+var API_BASE_URL = window.API_URL || 'http://localhost:3000';
+app.constant('API_URL', API_BASE_URL + '/api');
 
 // Storage Service - Now stores JWT and minimal local data
 app.factory('StorageService', function() {
