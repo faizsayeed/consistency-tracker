@@ -93,10 +93,15 @@ class NotificationService {
     // Check if current time matches reminder time and send notifications
     async checkAndSendReminders(usersWithReminders) {
         const now = new Date();
-        const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-        const currentSeconds = now.getSeconds();
+        
+        // Convert UTC to IST (UTC+5:30) for comparison
+        // IST offset is +330 minutes (5 hours 30 minutes)
+        const istOffset = 330 * 60 * 1000; // 330 minutes in milliseconds
+        const istTime = new Date(now.getTime() + istOffset);
+        const currentTime = `${String(istTime.getUTCHours()).padStart(2, '0')}:${String(istTime.getUTCMinutes()).padStart(2, '0')}`;
+        const currentSeconds = istTime.getUTCSeconds();
 
-        console.log(`[${now.toISOString()}] Checking reminders at ${currentTime} (seconds: ${currentSeconds})`);
+        console.log(`[${now.toISOString()}] Checking reminders at IST ${currentTime} (UTC: ${String(now.getUTCHours()).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')})`);
 
         // Only run at the start of each minute (0-10 seconds)
         if (currentSeconds > 10) {
