@@ -1,6 +1,6 @@
 // API Configuration
 // Use environment variable for API URL, fallback to Render URL
-const API_BASE_URL = window.API_URL || 'https://consistency-tracker-hz8m.onrender.com';
+const API_BASE_URL = window.API_URL || 'https://consistency-tracker-1.onrender.com';
 app.constant('API_URL', API_BASE_URL + '/api');
 
 // Storage Service - Now stores JWT and minimal local data
