@@ -43,7 +43,7 @@ class NotificationService {
         }
 
         const mailOptions = {
-            from: `"Consistency Tracker" <${process.env.EMAIL_USER}>`,
+            from: `"Consistency Tracker" <onboarding@resend.dev>`,
             to: to,
             subject: `Reminder: Time to complete "${habitName}"`,
             html: `
