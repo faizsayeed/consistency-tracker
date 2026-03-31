@@ -10,10 +10,17 @@ class NotificationService {
             auth: {
                 user: process.env.EMAIL_USER,
                 pass: process.env.EMAIL_PASS
-            }
+            },
+            tls: {
+                rejectUnauthorized: false
+            },
+            debug: true, // Enable debug logging
+            logger: true  // Log to console
         });
 
         this.emailEnabled = !!(process.env.EMAIL_USER && process.env.EMAIL_PASS);
+        console.log(`Email service enabled: ${this.emailEnabled}`);
+        console.log(`Email user: ${process.env.EMAIL_USER}`);
         
         // Initialize Twilio if credentials available
         this.twilioEnabled = !!(process.env.TWILIO_SID && process.env.TWILIO_TOKEN && process.env.TWILIO_PHONE);
@@ -57,10 +64,12 @@ class NotificationService {
         };
 
         try {
-            await this.transporter.sendMail(mailOptions);
+            const info = await this.transporter.sendMail(mailOptions);
             console.log(`[${new Date().toISOString()}] Email reminder sent to ${to} for habit: ${habitName}`);
+            console.log('Email response:', info.response);
         } catch (error) {
             console.error('Email sending failed:', error.message);
+            console.error('Full error:', error);
         }
     }
 
