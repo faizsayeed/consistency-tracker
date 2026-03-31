@@ -73,6 +73,46 @@ app.get('/api/test-notifications', async (req, res) => {
         res.status(500).json({ error: 'Failed to send test notifications' });
     }
 });
+// Initialize database tables
+async function initDatabase() {
+    try {
+        await User.createTable();
+        await Habit.createTable();
+        await HabitLog.createTable();
+        console.log('Database tables initialized');
+    } catch (error) {
+        console.error('Database initialization error:', error);
+    }
+}
+
+// Notification service (cron job for reminders)
+function initNotificationService() {
+    cron.schedule('*/30 * * * * *', async () => {
+        const now = new Date();
+        const currentTime = now.toTimeString().slice(0, 5);
+        const currentSeconds = now.getSeconds();
+        
+        console.log(`[${now.toISOString()}] Notification check running at ${currentTime}:${String(currentSeconds).padStart(2, '0')}`);
+        
+        try {
+            const emailUsers = await User.getUsersWithEmailReminders();
+            console.log(`Found ${emailUsers.length} users with email reminders`);
+            if (emailUsers.length > 0) {
+                await notificationService.checkAndSendReminders(emailUsers);
+            }
+            
+            const smsUsers = await User.getUsersWithSMSReminders();
+            console.log(`Found ${smsUsers.length} users with SMS reminders`);
+            if (smsUsers.length > 0) {
+                await notificationService.checkAndSendReminders(smsUsers);
+            }
+        } catch (error) {
+            console.error('Notification service error:', error);
+        }
+    });
+    console.log('Notification service initialized');
+}
+
 // Start server
 async function startServer() {
     await testConnection();
