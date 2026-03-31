@@ -74,13 +74,8 @@ class NotificationService {
     }
 
     async sendSMSReminder(phone, habitName) {
-        // Always show as console log since we don't have a real Twilio number
-        console.log(`SMS to ${phone}: "Reminder: Time to complete '${habitName}'"`);
-        console.log('Note: SMS would be sent if TWILIO_PHONE was a valid Twilio number');
-        return;
-        
-        // Code below won't execute - keeping for reference when you get a real Twilio number
         if (!this.twilioEnabled) {
+            console.log('Twilio not configured. SMS would send to:', phone);
             return;
         }
 
