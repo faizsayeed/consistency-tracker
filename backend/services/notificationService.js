@@ -2,10 +2,15 @@ const nodemailer = require('nodemailer');
 
 class NotificationService {
     constructor() {
-        // Check if using Resend (REST API) or SMTP
+        // Check if using Brevo (API) or Resend or SMTP
+        this.useBrevoAPI = process.env.EMAIL_HOST === 'smtp-relay.sendinblue.com' || process.env.EMAIL_HOST === 'api.brevo.com';
         this.useResendAPI = process.env.EMAIL_HOST === 'smtp.resend.com' || process.env.EMAIL_HOST === 'api.resend.com';
         
-        if (this.useResendAPI) {
+        if (this.useBrevoAPI) {
+            // Use Brevo REST API
+            this.brevoApiKey = process.env.EMAIL_PASS;
+            console.log('Using Brevo REST API for emails');
+        } else if (this.useResendAPI) {
             // Use Resend REST API
             this.resendApiKey = process.env.EMAIL_PASS;
             console.log('Using Resend REST API for emails');
@@ -37,6 +42,7 @@ class NotificationService {
             try {
                 const twilio = require('twilio');
                 this.twilioClient = twilio(process.env.TWILIO_SID, process.env.TWILIO_TOKEN);
+                this.twilioPhone = process.env.TWILIO_PHONE;
                 console.log('Twilio SMS service initialized');
             } catch (error) {
                 console.log('Twilio not installed. Run: npm install twilio');
@@ -52,7 +58,10 @@ class NotificationService {
         }
 
         try {
-            if (this.useResendAPI) {
+            if (this.useBrevoAPI) {
+                // Use Brevo REST API
+                await this.sendBrevoEmail(to, habitName, userName);
+            } else if (this.useResendAPI) {
                 // Use Resend REST API
                 await this.sendResendEmail(to, habitName, userName);
             } else {
@@ -62,6 +71,53 @@ class NotificationService {
         } catch (error) {
             console.error('❌ Email sending failed:', error.message);
             console.error('Full error:', error);
+        }
+    }
+
+    async sendBrevoEmail(to, habitName, userName) {
+        const emailData = {
+            sender: {
+                name: "Consistency Tracker",
+                email: "noreply@consistency-tracker.com"
+            },
+            to: [{ email: to }],
+            subject: `Reminder: Time to complete "${habitName}"`,
+            htmlContent: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #6366f1;">Hello ${userName}!</h2>
+                    <p>This is a friendly reminder to complete your habit:</p>
+                    <div style="background: #f9fafb; padding: 20px; border-radius: 12px; margin: 20px 0;">
+                        <h3 style="margin: 0; color: #1f2937;">${habitName}</h3>
+                    </div>
+                    <p>Stay consistent and keep building those good habits!</p>
+                    <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
+                    <p style="font-size: 12px; color: #6b7280;">
+                        You received this email because you enabled reminders in Consistency Tracker.<br>
+                        To unsubscribe, update your notification settings in the app.
+                    </p>
+                </div>
+            `
+        };
+
+        console.log(`Sending email via Brevo API to ${to}`);
+        
+        const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+            method: 'POST',
+            headers: {
+                'api-key': this.brevoApiKey,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(emailData)
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            console.log(`[${new Date().toISOString()}] ✅ Email sent to ${to}, MessageId: ${result.messageId}`);
+        } else {
+            console.error(`❌ Brevo API error:`, result);
+            throw new Error(result.message || 'Brevo API failed');
         }
     }
 
@@ -144,10 +200,17 @@ class NotificationService {
         try {
             // Ensure phone numbers are in E.164 format
             const toPhone = phone.startsWith('+') ? phone : '+' + phone;
+            const fromPhone = this.twilioPhone.startsWith('+') ? this.twilioPhone : '+' + this.twilioPhone;
+            
+            // Skip if trying to send to the same number (Twilio restriction)
+            if (toPhone === fromPhone) {
+                console.log(`⚠️  Skipping SMS - cannot send to same number: ${toPhone}`);
+                return;
+            }
             
             await this.twilioClient.messages.create({
                 body: `Reminder: Time to complete "${habitName}" - Consistency Tracker`,
-                from: process.env.TWILIO_PHONE,
+                from: this.twilioPhone,
                 to: toPhone
             });
             console.log(`[${new Date().toISOString()}] SMS reminder sent to ${toPhone} for habit: ${habitName}`);
