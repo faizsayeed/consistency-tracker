@@ -20,7 +20,7 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 const corsOptions = {
   origin: [
-    'https://consistency-tracker-1hqe.vercel.app', // ✅ your frontend
+    'https://consistency-tracker-tsen.vercel.app', // ✅ new frontend
     'http://localhost:3000',
     'http://localhost:5500'
   ],
