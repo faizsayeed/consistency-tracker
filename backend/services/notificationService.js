@@ -78,7 +78,7 @@ class NotificationService {
         const emailData = {
             sender: {
                 name: "Consistency Tracker",
-                email: "noreply@consistency-tracker.com"
+                email: "faizsayeed16556@gmail.com"
             },
             to: [{ email: to }],
             subject: `Reminder: Time to complete "${habitName}"`,
