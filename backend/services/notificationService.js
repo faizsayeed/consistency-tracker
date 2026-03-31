@@ -2,25 +2,34 @@ const nodemailer = require('nodemailer');
 
 class NotificationService {
     constructor() {
-        // Create email transporter using SMTP
-        this.transporter = nodemailer.createTransport({
-            host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-            port: process.env.EMAIL_PORT || 587,
-            secure: false,
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS
-            },
-            tls: {
-                rejectUnauthorized: false
-            },
-            debug: true, // Enable debug logging
-            logger: true  // Log to console
-        });
+        // Check if using Resend (REST API) or SMTP
+        this.useResendAPI = process.env.EMAIL_HOST === 'smtp.resend.com' || process.env.EMAIL_HOST === 'api.resend.com';
+        
+        if (this.useResendAPI) {
+            // Use Resend REST API
+            this.resendApiKey = process.env.EMAIL_PASS;
+            console.log('Using Resend REST API for emails');
+        } else {
+            // Create email transporter using SMTP (for Gmail, etc.)
+            this.transporter = nodemailer.createTransport({
+                host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+                port: process.env.EMAIL_PORT || 587,
+                secure: false,
+                auth: {
+                    user: process.env.EMAIL_USER,
+                    pass: process.env.EMAIL_PASS
+                },
+                tls: {
+                    rejectUnauthorized: false
+                },
+                debug: true,
+                logger: true
+            });
+        }
 
         this.emailEnabled = !!(process.env.EMAIL_USER && process.env.EMAIL_PASS);
         console.log(`Email service enabled: ${this.emailEnabled}`);
-        console.log(`Email user: ${process.env.EMAIL_USER}`);
+        console.log(`Email host: ${process.env.EMAIL_HOST}`);
         
         // Initialize Twilio if credentials available
         this.twilioEnabled = !!(process.env.TWILIO_SID && process.env.TWILIO_TOKEN && process.env.TWILIO_PHONE);
@@ -42,8 +51,23 @@ class NotificationService {
             return;
         }
 
-        const mailOptions = {
-            from: `"Consistency Tracker" <onboarding@resend.dev>`,
+        try {
+            if (this.useResendAPI) {
+                // Use Resend REST API
+                await this.sendResendEmail(to, habitName, userName);
+            } else {
+                // Use SMTP
+                await this.sendSMTPEmail(to, habitName, userName);
+            }
+        } catch (error) {
+            console.error('❌ Email sending failed:', error.message);
+            console.error('Full error:', error);
+        }
+    }
+
+    async sendResendEmail(to, habitName, userName) {
+        const emailData = {
+            from: 'onboarding@resend.dev',
             to: to,
             subject: `Reminder: Time to complete "${habitName}"`,
             html: `
@@ -63,17 +87,52 @@ class NotificationService {
             `
         };
 
-        try {
-            console.log(`Attempting to send email via ${process.env.EMAIL_HOST}`);
-            const info = await this.transporter.sendMail(mailOptions);
-            console.log(`[${new Date().toISOString()}] ✅ Email reminder sent to ${to} for habit: ${habitName}`);
-            console.log('Email response:', info.response);
-            console.log('Message ID:', info.messageId);
-        } catch (error) {
-            console.error('❌ Email sending failed:', error.message);
-            console.error('Full error:', error);
-            console.error('Error code:', error.code);
+        console.log(`Sending email via Resend API to ${to}`);
+        
+        const response = await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${this.resendApiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(emailData)
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            console.log(`[${new Date().toISOString()}] ✅ Email sent to ${to}, ID: ${result.id}`);
+        } else {
+            console.error(`❌ Resend API error:`, result);
+            throw new Error(result.message || 'Resend API failed');
         }
+    }
+
+    async sendSMTPEmail(to, habitName, userName) {
+        const mailOptions = {
+            from: `"Consistency Tracker" <${process.env.EMAIL_USER}>`,
+            to: to,
+            subject: `Reminder: Time to complete "${habitName}"`,
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #6366f1;">Hello ${userName}!</h2>
+                    <p>This is a friendly reminder to complete your habit:</p>
+                    <div style="background: #f9fafb; padding: 20px; border-radius: 12px; margin: 20px 0;">
+                        <h3 style="margin: 0; color: #1f2937;">${habitName}</h3>
+                    </div>
+                    <p>Stay consistent and keep building those good habits!</p>
+                    <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
+                    <p style="font-size: 12px; color: #6b7280;">
+                        You received this email because you enabled reminders in Consistency Tracker.<br>
+                        To unsubscribe, update your notification settings in the app.
+                    </p>
+                </div>
+            `
+        };
+
+        console.log(`Sending email via SMTP to ${to}`);
+        const info = await this.transporter.sendMail(mailOptions);
+        console.log(`[${new Date().toISOString()}] ✅ Email sent, ID: ${info.messageId}`);
     }
 
     async sendSMSReminder(phone, habitName) {
