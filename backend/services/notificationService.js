@@ -64,12 +64,15 @@ class NotificationService {
         };
 
         try {
+            console.log(`Attempting to send email via ${process.env.EMAIL_HOST}`);
             const info = await this.transporter.sendMail(mailOptions);
-            console.log(`[${new Date().toISOString()}] Email reminder sent to ${to} for habit: ${habitName}`);
+            console.log(`[${new Date().toISOString()}] ✅ Email reminder sent to ${to} for habit: ${habitName}`);
             console.log('Email response:', info.response);
+            console.log('Message ID:', info.messageId);
         } catch (error) {
-            console.error('Email sending failed:', error.message);
+            console.error('❌ Email sending failed:', error.message);
             console.error('Full error:', error);
+            console.error('Error code:', error.code);
         }
     }
 
