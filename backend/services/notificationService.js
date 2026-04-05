@@ -1,5 +1,24 @@
 const nodemailer = require('nodemailer');
 
+// Motivational quotes for email reminders
+const MOTIVATIONAL_QUOTES = [
+    "Your bloodline survived wars, famine, and pain… don't be the one who quits because it's hard.",
+    "You weren't born to scroll — you were born to build something that outlives you.",
+    "Nobody is coming to save you. That's your advantage.",
+    "If you don't change your life, someone else will live the life you wanted.",
+    "Comfort is the most dangerous drug — it kills ambition slowly.",
+    "You're either building your future or escaping your present. Choose wisely.",
+    "Discipline will take you places motivation never will.",
+    "One year of focus can change your entire bloodline.",
+    "The pain of staying the same is worse than the pain of growth.",
+    "Be the man your younger self needed and your future self will thank."
+];
+
+function getRandomQuote() {
+    const index = Math.floor(Math.random() * MOTIVATIONAL_QUOTES.length);
+    return MOTIVATIONAL_QUOTES[index];
+}
+
 class NotificationService {
     constructor() {
         // Check if using Brevo (API) or Resend or SMTP
@@ -77,6 +96,7 @@ class NotificationService {
     }
 
     async sendBrevoEmail(to, habitName, userName) {
+        const randomQuote = getRandomQuote();
         const emailData = {
             sender: {
                 name: "Consistency Tracker",
@@ -90,6 +110,9 @@ class NotificationService {
                     <p>This is a friendly reminder to complete your habit:</p>
                     <div style="background: #f9fafb; padding: 20px; border-radius: 12px; margin: 20px 0;">
                         <h3 style="margin: 0; color: #1f2937;">${habitName}</h3>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #1f2937 0%, #374151 100%); padding: 20px; border-radius: 12px; margin: 20px 0; border-left: 4px solid #22c55e;">
+                        <p style="margin: 0; color: #e5e7eb; font-style: italic; font-size: 16px; line-height: 1.5;">"${randomQuote}"</p>
                     </div>
                     <p>Stay consistent and keep building those good habits!</p>
                     <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
@@ -124,6 +147,7 @@ class NotificationService {
     }
 
     async sendResendEmail(to, habitName, userName) {
+        const randomQuote = getRandomQuote();
         const emailData = {
             from: 'onboarding@resend.dev',
             to: to,
@@ -134,6 +158,9 @@ class NotificationService {
                     <p>This is a friendly reminder to complete your habit:</p>
                     <div style="background: #f9fafb; padding: 20px; border-radius: 12px; margin: 20px 0;">
                         <h3 style="margin: 0; color: #1f2937;">${habitName}</h3>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #1f2937 0%, #374151 100%); padding: 20px; border-radius: 12px; margin: 20px 0; border-left: 4px solid #22c55e;">
+                        <p style="margin: 0; color: #e5e7eb; font-style: italic; font-size: 16px; line-height: 1.5;">"${randomQuote}"</p>
                     </div>
                     <p>Stay consistent and keep building those good habits!</p>
                     <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
@@ -167,6 +194,7 @@ class NotificationService {
     }
 
     async sendSMTPEmail(to, habitName, userName) {
+        const randomQuote = getRandomQuote();
         const mailOptions = {
             from: `"Consistency Tracker" <${process.env.EMAIL_USER}>`,
             to: to,
@@ -177,6 +205,9 @@ class NotificationService {
                     <p>This is a friendly reminder to complete your habit:</p>
                     <div style="background: #f9fafb; padding: 20px; border-radius: 12px; margin: 20px 0;">
                         <h3 style="margin: 0; color: #1f2937;">${habitName}</h3>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #1f2937 0%, #374151 100%); padding: 20px; border-radius: 12px; margin: 20px 0; border-left: 4px solid #22c55e;">
+                        <p style="margin: 0; color: #e5e7eb; font-style: italic; font-size: 16px; line-height: 1.5;">"${randomQuote}"</p>
                     </div>
                     <p>Stay consistent and keep building those good habits!</p>
                     <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
