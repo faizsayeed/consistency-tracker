@@ -48,14 +48,25 @@ app.controller('DashboardCtrl', function($scope, HabitService, AuthService) {
     $scope.completionMap = {};
     $scope.loading = true;
     
+    // Helper function to format date in local timezone (not UTC)
+    function formatDateLocal(date) {
+        var y = date.getFullYear();
+        var m = String(date.getMonth() + 1).padStart(2, '0');
+        var d = String(date.getDate()).padStart(2, '0');
+        return y + '-' + m + '-' + d;
+    }
+    
     function loadData() {
         HabitService.getHabits().then(function(habits) {
             $scope.habits = habits;
             $scope.totalHabits = habits.length;
             
-            var today = new Date().toISOString().split('T')[0];
+            // Use local date, not UTC
+            var today = formatDateLocal(new Date());
+            console.log('Dashboard loading for date:', today);
             return HabitService.getCompletionForDate(today);
         }).then(function(todayLogs) {
+            console.log('Today logs received:', todayLogs);
             $scope.habits.forEach(function(habit) {
                 $scope.completionMap[habit.id] = todayLogs[habit.id] || false;
             });
@@ -74,11 +85,19 @@ app.controller('DashboardCtrl', function($scope, HabitService, AuthService) {
     };
     
     $scope.toggleHabit = function(habit) {
-        var today = new Date().toISOString().split('T')[0];
-        HabitService.logCompletion(habit.id, today, $scope.completionMap[habit.id])
-            .then(function() {
+        // Use local date, not UTC
+        var today = formatDateLocal(new Date());
+        var completed = $scope.completionMap[habit.id];
+        console.log('Toggling habit:', habit.id, habit.name, 'Date:', today, 'Completed:', completed);
+        
+        HabitService.logCompletion(habit.id, today, completed)
+            .then(function(response) {
+                console.log('Log completion success:', response);
                 $scope.todayCompleted = Object.keys($scope.completionMap).filter(k => $scope.completionMap[k]).length;
                 $scope.completionPercentage = $scope.totalHabits ? Math.round(($scope.todayCompleted / $scope.totalHabits) * 100) : 0;
+            })
+            .catch(function(error) {
+                console.error('Log completion error:', error);
             });
     };
     
@@ -221,6 +240,9 @@ app.controller('AnalyticsCtrl', function($scope, HabitService) {
     $scope.filteredStats = { completed: 0 };
     $scope.loading = true;
     $scope.selectedHabit = ''; // Track selected habit
+    
+    // Chart instances
+    var barChart, pieChart, lineChart;
 
     function formatDateLocal(dateLike) {
         var d = (dateLike instanceof Date) ? dateLike : new Date(dateLike);
@@ -248,11 +270,211 @@ app.controller('AnalyticsCtrl', function($scope, HabitService) {
         }).then(function() {
             return calculateStats();
         }).then(function() {
+            return loadChartData();
+        }).then(function() {
             $scope.loading = false;
         }).catch(function(error) {
             console.error('Analytics load error:', error);
             $scope.loading = false;
         });
+    }
+    
+    // Load and initialize charts
+    function loadChartData() {
+        var startStr = formatDateLocal($scope.dateRange.start);
+        var endStr = formatDateLocal($scope.dateRange.end);
+        
+        return HabitService.getChartData(startStr, endStr).then(function(chartData) {
+            console.log('Chart data received:', chartData);
+            initCharts(chartData);
+        }).catch(function(error) {
+            console.error('Chart data error:', error);
+        });
+    }
+    
+    // Initialize all charts
+    function initCharts(data) {
+        // Destroy existing charts if they exist
+        if (barChart) barChart.destroy();
+        if (pieChart) pieChart.destroy();
+        if (lineChart) lineChart.destroy();
+        
+        // Common chart options for dark theme
+        var commonOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: '#e5e5e5',
+                        font: { size: 12 }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: '#a3a3a3' },
+                    grid: { color: '#404040' }
+                },
+                y: {
+                    ticks: { color: '#a3a3a3' },
+                    grid: { color: '#404040' }
+                }
+            }
+        };
+        
+        // Bar Chart - Habit Completion Rate
+        var barCtx = document.getElementById('barChart');
+        if (barCtx && data.barChart && data.barChart.labels.length > 0) {
+            barChart = new Chart(barCtx, {
+                type: 'bar',
+                data: {
+                    labels: data.barChart.labels,
+                    datasets: [{
+                        label: 'Completion Rate (%)',
+                        data: data.barChart.data,
+                        backgroundColor: data.barChart.colors,
+                        borderColor: '#22c55e',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    ...commonOptions,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.parsed.y + '% completion rate';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                color: '#a3a3a3',
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            },
+                            grid: { color: '#404040' }
+                        },
+                        x: {
+                            ticks: { 
+                                color: '#a3a3a3',
+                                maxRotation: 45,
+                                minRotation: 45
+                            },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Pie Chart - Habit Distribution
+        var pieCtx = document.getElementById('pieChart');
+        if (pieCtx && data.pieChart && data.pieChart.labels.length > 0) {
+            pieChart = new Chart(pieCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.pieChart.labels,
+                    datasets: [{
+                        data: data.pieChart.data,
+                        backgroundColor: data.pieChart.colors,
+                        borderColor: '#171717',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#e5e5e5',
+                                font: { size: 11 },
+                                boxWidth: 12,
+                                padding: 10
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Line Chart - Completion Trend
+        var lineCtx = document.getElementById('lineChart');
+        if (lineCtx && data.lineChart && data.lineChart.labels.length > 0) {
+            lineChart = new Chart(lineCtx, {
+                type: 'line',
+                data: {
+                    labels: data.lineChart.labels,
+                    datasets: [
+                        {
+                            label: 'Completed Habits',
+                            data: data.lineChart.completed,
+                            borderColor: '#22c55e',
+                            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#22c55e',
+                            pointBorderColor: '#171717',
+                            pointBorderWidth: 2,
+                            pointRadius: 4
+                        },
+                        {
+                            label: 'Total Habits',
+                            data: data.lineChart.total,
+                            borderColor: '#525252',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            fill: false,
+                            tension: 0.4,
+                            pointBackgroundColor: '#525252',
+                            pointBorderColor: '#171717',
+                            pointBorderWidth: 2,
+                            pointRadius: 3
+                        }
+                    ]
+                },
+                options: {
+                    ...commonOptions,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#e5e5e5',
+                                font: { size: 12 }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { color: '#a3a3a3' },
+                            grid: { color: '#404040' }
+                        },
+                        x: {
+                            ticks: { 
+                                color: '#a3a3a3',
+                                maxTicksLimit: 10
+                            },
+                            grid: { color: '#404040' }
+                        }
+                    }
+                }
+            });
+        }
     }
     
     function generateHeatmapData() {
@@ -284,11 +506,14 @@ app.controller('AnalyticsCtrl', function($scope, HabitService) {
                 dataMap[item.log_date] = item;
             });
             
-            // Generate calendar grid exactly like GitHub (52 weeks)
-            var weeks = [];
-            var today = new Date();
-            var startDate = new Date(today);
-            startDate.setDate(startDate.getDate() - 364); // 52 weeks back
+            // Generate calendar grid based on dateRange
+            var startDate = new Date($scope.dateRange.start);
+            var endDate = new Date($scope.dateRange.end);
+            
+            // Calculate number of weeks in the range
+            var diffTime = Math.abs(endDate - startDate);
+            var diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+            var numWeeks = Math.ceil(diffDays / 7);
             
             // Align to Sunday
             var dayOfWeek = startDate.getDay();
@@ -296,13 +521,14 @@ app.controller('AnalyticsCtrl', function($scope, HabitService) {
             startDate.setDate(startDate.getDate() - daysFromSunday);
             
             var currentDate = new Date(startDate);
+            var weeks = [];
             
             // Generate month labels
             var monthLabels = [];
             var currentMonth = null;
             
-            // Generate exactly 52 weeks of data
-            for (var w = 0; w < 52; w++) {
+            // Generate weeks of data
+            for (var w = 0; w < numWeeks; w++) {
                 var week = [];
                 
                 for (var d = 0; d < 7; d++) {
@@ -348,9 +574,15 @@ app.controller('AnalyticsCtrl', function($scope, HabitService) {
                     });
                     
                     currentDate.setDate(currentDate.getDate() + 1);
+                    
+                    // Stop if we've passed the end date
+                    if (currentDate > endDate) break;
                 }
                 
                 weeks.push(week);
+                
+                // Stop if we've passed the end date
+                if (currentDate > endDate) break;
             }
             
             // Remove duplicate month labels
@@ -400,6 +632,8 @@ app.controller('AnalyticsCtrl', function($scope, HabitService) {
         generateHeatmapData().then(function() {
             return calculateStats();
         }).then(function() {
+            return loadChartData();
+        }).then(function() {
             $scope.loading = false;
         }).catch(function(error) {
             console.error('Error updating heatmap:', error);
@@ -411,6 +645,8 @@ app.controller('AnalyticsCtrl', function($scope, HabitService) {
         $scope.loading = true;
         generateHeatmapData().then(function() {
             return calculateStats();
+        }).then(function() {
+            return loadChartData();
         }).then(function() {
             $scope.loading = false;
         });

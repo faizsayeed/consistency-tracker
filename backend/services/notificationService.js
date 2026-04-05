@@ -3,8 +3,8 @@ const nodemailer = require('nodemailer');
 class NotificationService {
     constructor() {
         // Check if using Brevo (API) or Resend or SMTP
-        this.useBrevoAPI = process.env.EMAIL_HOST === 'smtp-relay.sendinblue.com' || process.env.EMAIL_HOST === 'api.brevo.com';
-        this.useResendAPI = process.env.EMAIL_HOST === 'smtp.resend.com' || process.env.EMAIL_HOST === 'api.resend.com';
+        this.useBrevoAPI = process.env.EMAIL_HOST === 'api.brevo.com';
+        this.useResendAPI = process.env.EMAIL_HOST === 'api.resend.com';
         
         if (this.useBrevoAPI) {
             // Use Brevo REST API
@@ -15,9 +15,11 @@ class NotificationService {
             this.resendApiKey = process.env.EMAIL_PASS;
             console.log('Using Resend REST API for emails');
         } else {
-            // Create email transporter using SMTP (for Gmail, etc.)
+            // Create email transporter using SMTP (for SendGrid, Gmail, Mailjet, etc.)
+            const smtpHost = process.env.EMAIL_HOST || 'smtp.gmail.com';
+            console.log(`Creating SMTP transport with host: ${smtpHost}`);
             this.transporter = nodemailer.createTransport({
-                host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+                host: smtpHost,
                 port: process.env.EMAIL_PORT || 587,
                 secure: false,
                 auth: {
@@ -78,7 +80,7 @@ class NotificationService {
         const emailData = {
             sender: {
                 name: "Consistency Tracker",
-                email: "faizsayeed16556@gmail.com"
+                email: "faizsayeed524@gmail.com"
             },
             to: [{ email: to }],
             subject: `Reminder: Time to complete "${habitName}"`,
@@ -187,8 +189,17 @@ class NotificationService {
         };
 
         console.log(`Sending email via SMTP to ${to}`);
-        const info = await this.transporter.sendMail(mailOptions);
-        console.log(`[${new Date().toISOString()}] ✅ Email sent, ID: ${info.messageId}`);
+        try {
+            const info = await this.transporter.sendMail(mailOptions);
+            console.log(`[${new Date().toISOString()}] ✅ Email sent, ID: ${info.messageId}`);
+            console.log(`Response:`, info.response);
+            console.log(`Accepted:`, info.accepted);
+            console.log(`Rejected:`, info.rejected);
+        } catch (smtpError) {
+            console.error(`❌ SMTP Error:`, smtpError.message);
+            console.error(`Full SMTP Error:`, smtpError);
+            throw smtpError;
+        }
     }
 
     async sendSMSReminder(phone, habitName) {

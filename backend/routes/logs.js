@@ -9,5 +9,6 @@ router.get('/range', authenticate, logController.getByDateRange);
 router.get('/heatmap/habit/:habitId', authenticate, logController.getSingleHabitHeatmapData);
 router.get('/heatmap', authenticate, logController.getHeatmapData);
 router.get('/stats', authenticate, logController.getStats);
+router.get('/charts', authenticate, logController.getChartData);
 
 module.exports = router;

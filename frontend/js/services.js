@@ -1,6 +1,6 @@
 // API Configuration
-// Use environment variable for API URL, fallback to Render URL
-const API_BASE_URL = window.API_URL || 'https://consistency-tracker-1.onrender.com';
+// Use localhost for local development
+const API_BASE_URL = window.API_URL || 'http://localhost:3000';
 app.constant('API_URL', API_BASE_URL + '/api');
 
 // Storage Service - Now stores JWT and minimal local data
@@ -230,6 +230,14 @@ app.factory('HabitService', function($http, API_URL, StorageService) {
             return $http.get(url, { headers: getHeaders() })
                 .then(function(response) {
                     return response.data.stats;
+                });
+        },
+
+        getChartData: function(startDate, endDate) {
+            var url = API_URL + '/logs/charts?start=' + startDate + '&end=' + endDate;
+            return $http.get(url, { headers: getHeaders() })
+                .then(function(response) {
+                    return response.data;
                 });
         }
     };

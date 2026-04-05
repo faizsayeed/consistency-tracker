@@ -37,11 +37,9 @@
                 <label>Description</label>
                 <textarea ng-model="form.description" rows="3"></textarea>
             </div>
-            <div class="form-group" ng-if="notificationsSupported">
-                <label>
-                    <input type="checkbox" ng-model="form.reminder_enabled">
-                    Enable Daily Reminder
-                </label>
+            <div class="form-group checkbox-wrapper" ng-if="notificationsSupported">
+                <label for="reminder_enabled">Enable Daily Reminder</label>
+                <input type="checkbox" id="reminder_enabled" ng-model="form.reminder_enabled">
             </div>
             <div class="form-group" ng-if="form.reminder_enabled && notificationsSupported">
                 <label>Reminder Time</label>
