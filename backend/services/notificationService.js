@@ -99,8 +99,8 @@ class NotificationService {
         const randomQuote = getRandomQuote();
         const emailData = {
             sender: {
-                name: "Consistency Tracker",
-                email: "faizsayeed524@gmail.com"
+                name: "Habit Reminder",
+                email: "noreply@consistencytracker.app"
             },
             to: [{ email: to }],
             subject: `Reminder: Time to complete "${habitName}"`,
@@ -149,7 +149,7 @@ class NotificationService {
     async sendResendEmail(to, habitName, userName) {
         const randomQuote = getRandomQuote();
         const emailData = {
-            from: 'onboarding@resend.dev',
+            from: 'Habit Reminder <onboarding@resend.dev>',
             to: to,
             subject: `Reminder: Time to complete "${habitName}"`,
             html: `
@@ -196,7 +196,7 @@ class NotificationService {
     async sendSMTPEmail(to, habitName, userName) {
         const randomQuote = getRandomQuote();
         const mailOptions = {
-            from: `"Consistency Tracker" <${process.env.EMAIL_USER}>`,
+            from: `"Habit Reminder" <${process.env.EMAIL_USER}>`,
             to: to,
             subject: `Reminder: Time to complete "${habitName}"`,
             html: `
