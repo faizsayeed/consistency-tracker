@@ -4,6 +4,300 @@ app.controller('AuthCtrl', function($scope, $location, AuthService) {
     $scope.isLogin = true;
     $scope.errorMsg = '';
     
+    // Yeti animation variables
+    var yetiInitialized = false;
+    var mySVG, twoFingers, armL, armR, eyeL, eyeR, nose, mouth, mouthBG, mouthSmallBG, mouthMediumBG, mouthLargeBG, mouthMaskPath, mouthOutline, tooth, tongue, chin, face, eyebrow, outerEarL, outerEarR, earHairL, earHairR, hair, bodyBG, bodyBGchanged;
+    var eyesCovered = false;
+    var showPasswordClicked = false;
+    var activeElement = null;
+    var eyeScale = 1;
+    
+    // Initialize Yeti animations after view is rendered
+    $scope.$on('$viewContentLoaded', function() {
+        if ($scope.isLogin && !yetiInitialized) {
+            setTimeout(initYetiAnimations, 100);
+        }
+    });
+    
+    function initYetiAnimations() {
+        // Check if GSAP is available
+        if (typeof gsap === 'undefined') {
+            console.log('GSAP not loaded, skipping Yeti animations');
+            return;
+        }
+        
+        // Get DOM elements
+        mySVG = document.querySelector('.mySVG');
+        if (!mySVG) return;
+        
+        twoFingers = document.querySelector('.twoFingers');
+        armL = document.querySelector('.armL');
+        armR = document.querySelector('.armR');
+        eyeL = document.querySelector('.eyeL');
+        eyeR = document.querySelector('.eyeR');
+        nose = document.querySelector('.nose');
+        mouth = document.querySelector('.mouth');
+        mouthBG = document.querySelector('.mouthBG');
+        mouthSmallBG = document.querySelector('.mouthSmallBG');
+        mouthMediumBG = document.querySelector('.mouthMediumBG');
+        mouthLargeBG = document.querySelector('.mouthLargeBG');
+        mouthMaskPath = document.querySelector('#mouthMaskPath');
+        mouthOutline = document.querySelector('.mouthOutline');
+        tooth = document.querySelector('.tooth');
+        tongue = document.querySelector('.tongue');
+        chin = document.querySelector('.chin');
+        face = document.querySelector('.face');
+        eyebrow = document.querySelector('.eyebrow');
+        outerEarL = document.querySelector('.earL .outerEar');
+        outerEarR = document.querySelector('.earR .outerEar');
+        earHairL = document.querySelector('.earL .earHair');
+        earHairR = document.querySelector('.earR .earHair');
+        hair = document.querySelector('.hair');
+        bodyBG = document.querySelector('.bodyBGnormal');
+        bodyBGchanged = document.querySelector('.bodyBGchanged');
+        
+        // Set initial arm positions
+        gsap.set(armL, { x: -93, y: 220, rotation: 105, transformOrigin: "top left" });
+        gsap.set(armR, { x: -93, y: 220, rotation: -105, transformOrigin: "top right" });
+        gsap.set(mouth, { transformOrigin: "center center" });
+        
+        // Start blinking
+        startBlinking(5);
+        
+        yetiInitialized = true;
+        console.log('Yeti animations initialized');
+    }
+    
+    function startBlinking(delay) {
+        if (!eyeL || !eyeR) return;
+        var blinkDelay = delay || getRandomInt(12);
+        gsap.to([eyeL, eyeR], 0.1, {
+            delay: blinkDelay,
+            scaleY: 0,
+            yoyo: true,
+            repeat: 1,
+            transformOrigin: "center center",
+            onComplete: function() {
+                startBlinking();
+            }
+        });
+    }
+    
+    function getRandomInt(max) {
+        return Math.floor(Math.random() * Math.floor(max));
+    }
+    
+    // Yeti event handlers
+    $scope.onYetiEmailFocus = function() {
+        activeElement = "email";
+        if (yetiInitialized) {
+            calculateFaceMove();
+        }
+    };
+    
+    $scope.onYetiEmailBlur = function() {
+        activeElement = null;
+        setTimeout(function() {
+            if (activeElement !== "email" && yetiInitialized) {
+                resetFace();
+            }
+        }, 100);
+    };
+    
+    $scope.onYetiEmailInput = function() {
+        if (yetiInitialized) {
+            calculateFaceMove();
+            var value = document.getElementById('yetiEmail').value;
+            
+            if (value.length > 0) {
+                if (!value.includes("@")) {
+                    // Medium mouth
+                    gsap.to([mouthBG, mouthOutline, mouthMaskPath], 1, { morphSVG: mouthMediumBG, ease: "expo.out" });
+                    gsap.to(tooth, 1, { x: 0, y: 0, ease: "expo.out" });
+                    gsap.to(tongue, 1, { x: 0, y: 1, ease: "expo.out" });
+                    gsap.to([eyeL, eyeR], 1, { scaleX: 0.85, scaleY: 0.85, ease: "expo.out" });
+                    eyeScale = 0.85;
+                } else {
+                    // Large mouth (happy)
+                    gsap.to([mouthBG, mouthOutline, mouthMaskPath], 1, { morphSVG: mouthLargeBG, ease: "expo.out" });
+                    gsap.to(tooth, 1, { x: 3, y: -2, ease: "expo.out" });
+                    gsap.to(tongue, 1, { y: 2, ease: "expo.out" });
+                    gsap.to([eyeL, eyeR], 1, { scaleX: 0.65, scaleY: 0.65, ease: "expo.out", transformOrigin: "center center" });
+                    eyeScale = 0.65;
+                }
+            } else {
+                // Small mouth
+                gsap.to([mouthBG, mouthOutline, mouthMaskPath], 1, { morphSVG: mouthSmallBG, ease: "expo.out" });
+                gsap.to(tooth, 1, { x: 0, y: 0, ease: "expo.out" });
+                gsap.to(tongue, 1, { y: 0, ease: "expo.out" });
+                gsap.to([eyeL, eyeR], 1, { scaleX: 1, scaleY: 1, ease: "expo.out" });
+                eyeScale = 1;
+            }
+        }
+    };
+    
+    $scope.onYetiPasswordFocus = function() {
+        activeElement = "password";
+        if (yetiInitialized && !eyesCovered) {
+            coverEyes();
+        }
+    };
+    
+    $scope.onYetiPasswordBlur = function() {
+        activeElement = null;
+        setTimeout(function() {
+            if (activeElement !== "password" && activeElement !== "toggle" && yetiInitialized) {
+                uncoverEyes();
+            }
+        }, 100);
+    };
+    
+    $scope.togglePasswordVisibility = function() {
+        var passwordInput = document.getElementById('yetiPassword');
+        var showPasswordCheck = document.getElementById('showPasswordCheck');
+        
+        if (passwordInput && showPasswordCheck) {
+            if (showPasswordCheck.checked) {
+                passwordInput.type = "text";
+                if (yetiInitialized) spreadFingers();
+            } else {
+                passwordInput.type = "password";
+                if (yetiInitialized) closeFingers();
+            }
+        }
+    };
+    
+    function calculateFaceMove() {
+        if (!eyeL || !mySVG) return;
+        
+        var emailInput = document.getElementById('yetiEmail');
+        if (!emailInput) return;
+        
+        var svgCoords = getPosition(mySVG);
+        var emailCoords = getPosition(emailInput);
+        var screenCenter = svgCoords.x + (mySVG.offsetWidth / 2);
+        
+        var eyeLCoords = { x: svgCoords.x + 84, y: svgCoords.y + 76 };
+        var eyeRCoords = { x: svgCoords.x + 113, y: svgCoords.y + 76 };
+        var noseCoords = { x: svgCoords.x + 97, y: svgCoords.y + 81 };
+        var mouthCoords = { x: svgCoords.x + 100, y: svgCoords.y + 100 };
+        
+        var dFromC = screenCenter - (emailCoords.x + emailInput.offsetWidth / 2);
+        var eyeLAngle = getAngle(eyeLCoords.x, eyeLCoords.y, emailCoords.x + emailInput.offsetWidth / 2, emailCoords.y + 25);
+        var eyeRAngle = getAngle(eyeRCoords.x, eyeRCoords.y, emailCoords.x + emailInput.offsetWidth / 2, emailCoords.y + 25);
+        var noseAngle = getAngle(noseCoords.x, noseCoords.y, emailCoords.x + emailInput.offsetWidth / 2, emailCoords.y + 25);
+        var mouthAngle = getAngle(mouthCoords.x, mouthCoords.y, emailCoords.x + emailInput.offsetWidth / 2, emailCoords.y + 25);
+        
+        var eyeLX = Math.cos(eyeLAngle) * 20;
+        var eyeLY = Math.sin(eyeLAngle) * 10;
+        var eyeRX = Math.cos(eyeRAngle) * 20;
+        var eyeRY = Math.sin(eyeRAngle) * 10;
+        var noseX = Math.cos(noseAngle) * 23;
+        var noseY = Math.sin(noseAngle) * 10;
+        var mouthX = Math.cos(mouthAngle) * 23;
+        var mouthY = Math.sin(mouthAngle) * 10;
+        var mouthR = Math.cos(mouthAngle) * 6;
+        var chinX = mouthX * 0.8;
+        var chinY = mouthY * 0.5;
+        var chinS = 1 - ((dFromC * 0.15) / 100);
+        if (chinS > 1) {
+            chinS = 1 - (chinS - 1);
+            if (chinS < 0.5) chinS = 0.5;
+        }
+        var faceX = mouthX * 0.3;
+        var faceY = mouthY * 0.4;
+        var faceSkew = Math.cos(mouthAngle) * 5;
+        var eyebrowSkew = Math.cos(mouthAngle) * 25;
+        var outerEarX = Math.cos(mouthAngle) * 4;
+        var outerEarY = Math.cos(mouthAngle) * 5;
+        var hairX = Math.cos(mouthAngle) * 6;
+        var hairS = 1.2;
+        
+        gsap.to(eyeL, 1, { x: -eyeLX, y: -eyeLY, ease: "expo.out" });
+        gsap.to(eyeR, 1, { x: -eyeRX, y: -eyeRY, ease: "expo.out" });
+        gsap.to(nose, 1, { x: -noseX, y: -noseY, rotation: mouthR, transformOrigin: "center center", ease: "expo.out" });
+        gsap.to(mouth, 1, { x: -mouthX, y: -mouthY, rotation: mouthR, transformOrigin: "center center", ease: "expo.out" });
+        gsap.to(chin, 1, { x: -chinX, y: -chinY, scaleY: chinS, ease: "expo.out" });
+        gsap.to(face, 1, { x: -faceX, y: -faceY, skewX: -faceSkew, transformOrigin: "center top", ease: "expo.out" });
+        gsap.to(eyebrow, 1, { x: -faceX, y: -faceY, skewX: -eyebrowSkew, transformOrigin: "center top", ease: "expo.out" });
+        gsap.to(outerEarL, 1, { x: outerEarX, y: -outerEarY, ease: "expo.out" });
+        gsap.to(outerEarR, 1, { x: outerEarX, y: outerEarY, ease: "expo.out" });
+        gsap.to(earHairL, 1, { x: -outerEarX, y: -outerEarY, ease: "expo.out" });
+        gsap.to(earHairR, 1, { x: -outerEarX, y: outerEarY, ease: "expo.out" });
+        gsap.to(hair, 1, { x: hairX, scaleY: hairS, transformOrigin: "center bottom", ease: "expo.out" });
+    }
+    
+    function resetFace() {
+        if (!eyeL) return;
+        gsap.to([eyeL, eyeR], 1, { x: 0, y: 0, ease: "expo.out" });
+        gsap.to(nose, 1, { x: 0, y: 0, scaleX: 1, scaleY: 1, ease: "expo.out" });
+        gsap.to(mouth, 1, { x: 0, y: 0, rotation: 0, ease: "expo.out" });
+        gsap.to(chin, 1, { x: 0, y: 0, scaleY: 1, ease: "expo.out" });
+        gsap.to([face, eyebrow], 1, { x: 0, y: 0, skewX: 0, ease: "expo.out" });
+        gsap.to([outerEarL, outerEarR, earHairL, earHairR, hair], 1, { x: 0, y: 0, scaleY: 1, ease: "expo.out" });
+    }
+    
+    function coverEyes() {
+        if (!armL || !armR) return;
+        gsap.killTweensOf([armL, armR]);
+        gsap.set([armL, armR], { visibility: "visible" });
+        gsap.to(armL, 0.45, { x: -93, y: 10, rotation: 0, ease: "quad.out" });
+        gsap.to(armR, 0.45, { x: -93, y: 10, rotation: 0, ease: "quad.out", delay: 0.1 });
+        if (bodyBG && bodyBGchanged) {
+            gsap.to(bodyBG, 0.45, { morphSVG: bodyBGchanged, ease: "quad.out" });
+        }
+        eyesCovered = true;
+    }
+    
+    function uncoverEyes() {
+        if (!armL || !armR) return;
+        gsap.killTweensOf([armL, armR]);
+        gsap.to(armL, 1.35, { y: 220, ease: "quad.out" });
+        gsap.to(armL, 1.35, { rotation: 105, ease: "quad.out", delay: 0.1 });
+        gsap.to(armR, 1.35, { y: 220, ease: "quad.out" });
+        gsap.to(armR, 1.35, {
+            rotation: -105, ease: "quad.out", delay: 0.1, onComplete: function() {
+                gsap.set([armL, armR], { visibility: "hidden" });
+            }
+        });
+        if (bodyBG) {
+            gsap.to(bodyBG, 0.45, { morphSVG: bodyBG, ease: "quad.out" });
+        }
+        eyesCovered = false;
+    }
+    
+    function spreadFingers() {
+        if (!twoFingers) return;
+        gsap.to(twoFingers, 0.35, { transformOrigin: "bottom left", rotation: 30, x: -9, y: -2, ease: "power2.inOut" });
+    }
+    
+    function closeFingers() {
+        if (!twoFingers) return;
+        gsap.to(twoFingers, 0.35, { transformOrigin: "bottom left", rotation: 0, x: 0, y: 0, ease: "power2.inOut" });
+    }
+    
+    function getAngle(x1, y1, x2, y2) {
+        return Math.atan2(y1 - y2, x1 - x2);
+    }
+    
+    function getPosition(el) {
+        var xPos = 0;
+        var yPos = 0;
+        while (el) {
+            if (el.tagName == "BODY") {
+                var xScroll = el.scrollLeft || document.documentElement.scrollLeft;
+                var yScroll = el.scrollTop || document.documentElement.scrollTop;
+                xPos += (el.offsetLeft - xScroll + el.clientLeft);
+                yPos += (el.offsetTop - yScroll + el.clientTop);
+            } else {
+                xPos += (el.offsetLeft - el.scrollLeft + el.clientLeft);
+                yPos += (el.offsetTop - el.scrollTop + el.clientTop);
+            }
+            el = el.offsetParent;
+        }
+        return { x: xPos, y: yPos };
+    }
+    
     $scope.submit = function() {
         $scope.errorMsg = '';
         if (!$scope.form.email || !$scope.form.password) {
@@ -38,6 +332,14 @@ app.controller('AuthCtrl', function($scope, $location, AuthService) {
         $scope.isLogin = !$scope.isLogin;
         $scope.errorMsg = '';
         $scope.form = {};
+        yetiInitialized = false;
+        
+        // Reinitialize Yeti when switching back to login
+        if ($scope.isLogin) {
+            setTimeout(function() {
+                initYetiAnimations();
+            }, 100);
+        }
     };
 });
 
